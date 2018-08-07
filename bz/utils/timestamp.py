@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from bz.utils.format import fmt, pfmt
+from bz.utils.fmt import fmt, pfmt
 
 def utcnow():
     return datetime.utcnow()

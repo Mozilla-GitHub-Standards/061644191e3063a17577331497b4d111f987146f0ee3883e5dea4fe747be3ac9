@@ -6,9 +6,11 @@ import re
 import sys
 sys.dont_write_bytecode = True
 
+from glob import glob
+
 from doit.task import clean_targets
-from bz.utils.format import fmt
-from bz.utils.shell import call, rglob, globs, which
+from bz.utils.fmt import fmt
+from bz.utils.shell import cd, call, rglob, globs, which
 
 DOIT_CONFIG = {
     'verbosity': 2,
@@ -32,34 +34,48 @@ try:
 except:
     RMRF = 'rm -rf'
 
-def pylint():
+def pyfiles():
+    with cd(REPOROOT):
+        return sorted(glob('bz/**/*.py', recursive=True))
+
+def task_list_pyfiles():
     '''
-    run pylint
+    print all of the pyfiles
     '''
+    text = '\n'.join(pyfiles())
     return dict(
-        name='pylint',
         actions=[
-            fmt('pylint -j{J} --rcfile {TESTDIR}/pylint.rc {BZDIR}'),
+            fmt('echo "{text}"'),
         ],
     )
 
-def pytest():
+def task_pylint():
+    '''
+    run pylint
+    '''
+    for pyfile in pyfiles():
+        yield dict(
+            name=pyfile,
+            actions=[
+                fmt('pylint -j{J} --rcfile {TESTDIR}/pylint.rc {pyfile}'),
+            ],
+        )
+
+def task_pytest():
     '''
     run pytest
     '''
     return dict(
-        name='pytest',
         actions=[
             fmt('{PYTHON} -m pytest -s -vv {TESTDIR}'),
         ],
     )
 
-def pycov():
+def task_pycov():
     '''
     run pycov
     '''
     return dict(
-        name='pycov',
         actions=[
             fmt('pytest {PYTHON} -m pytest -s -vv --cov={BZDIR} {TESTDIR}'),
         ],
@@ -69,9 +85,16 @@ def task_test():
     '''
     run: pylint, pytest, pycov
     '''
-    yield pylint()
-    yield pytest()
-    yield pycov()
+    return dict(
+        task_dep=[
+            'pylint',
+            'pytest',
+            'pycov',
+        ],
+        actions=[
+            'echo "testing complete"',
+        ],
+    )
 
 def task_rmcache():
     '''
