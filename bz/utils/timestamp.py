@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from bz.utils.fmt import fmt, pfmt
+from .fmt import fmt, pfmt
 
 def utcnow():
     return datetime.utcnow()
-    #return datetime2int(datetime.utcnow())
 
 def datetime2int(dt, pattern='%Y%m%d%H%M%S'):
     return int(dt.strftime(pattern))
